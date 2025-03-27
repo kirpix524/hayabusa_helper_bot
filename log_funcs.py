@@ -1,9 +1,10 @@
 import logging
 import datetime
 from logging.handlers import TimedRotatingFileHandler
+from config import LOGS_DIRECTORY
 
 today = datetime.datetime.now().strftime("%d-%m-%Y")
-handler = TimedRotatingFileHandler(f"logs/log_{today}.log",
+handler = TimedRotatingFileHandler(f"{LOGS_DIRECTORY}log_{today}.log",
                                    when="midnight",
                                    interval=1,
                                    backupCount=7,
