@@ -1,7 +1,6 @@
 import telebot
-
-from config import TG_API_KEY
 from funcs import init_bot
+from config import TG_API_KEY
 from log_funcs import logger
 
 bot=telebot.TeleBot(TG_API_KEY)

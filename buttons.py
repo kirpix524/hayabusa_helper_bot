@@ -14,13 +14,10 @@ def get_main_menu(user_id):
     return keyboard
 
 def get_checkbox_menu(chat_id, options, user_choices, callback_prefix, save_btn_callback):
-    #print(f"get_checkbox_menu {user_id}")
     selected = user_choices.get(chat_id, set())
-    print(f"selected = {selected}")
     markup = InlineKeyboardMarkup()
     for option in options:
         checked="✅" if option in selected else "⬜"
         markup.add(InlineKeyboardButton(f"{checked} {option}", callback_data=f"{callback_prefix}{option}"))
     markup.add(InlineKeyboardButton("Сохранить", callback_data=save_btn_callback))
-    print(f"markup = {markup}")
     return markup

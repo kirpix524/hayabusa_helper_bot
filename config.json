@@ -3,5 +3,8 @@
   "admins" : [463653491],
   "avail_practices" : ["Понедельник 20:00", "Четверг 20:00", "Суббота 18:00"],
   "week_order" : ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"],
-  "logs_directory" : "../data/logs/"
+  "logs_directory" : "../data/logs/",
+  "logs_directory_deb" : "logs/",
+  "polls_file" : "../data/polls.json",
+  "polls_file_deb" : "polls.json"
 }
