@@ -10,7 +10,7 @@ handler = TimedRotatingFileHandler(f"{LOGS_DIRECTORY}log_{today}.log",
                                    backupCount=7,
                                    encoding="utf-8")
 handler.suffix = "%d-%m-%Y.log"
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(name)s - %(message)s")
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - [%(module)s.%(funcName)s] - %(message)s")
 handler.setFormatter(formatter)
 logger = logging.getLogger("MyLogger")
 logger.addHandler(handler)

@@ -5,6 +5,8 @@ import funcs as f
 from config import TG_GROUP_ID, AVAIL_PRACTICES, POLL_FILE
 from log_funcs import logger
 
+pending_polls = {}
+
 # Загружаем сохраненные опросы из файла
 def load_polls_from_file(poll_file):
     if os.path.exists(poll_file):
@@ -34,7 +36,7 @@ def register_handlers(bot):
             bot.delete_message(message.chat.id, message.message_id)
         except Exception as e:  # pylint: disable=broad-except
             logger.error(e)
-            bot.send_message(message.chat.id, f"Произошла ошибка {e.__class__.__name__}")
+            bot.send_message(message.chat.id, f"Произошла ошибка {str(e)}")
             bot.delete_message(message.chat.id, message.message_id)
 
     @bot.message_handler(commands=["help"])
@@ -45,6 +47,32 @@ def register_handlers(bot):
             return
         bot.send_message(message.chat.id, f"Это бот-помощник саратовского клуба кендо Хаябуса")
         bot.delete_message(message.chat.id, message.message_id)
+
+    @bot.message_handler(func=lambda message: message.from_user.id in pending_polls)
+    def handle_additional_poll_message(message):
+        """Обрабатывает дополнительное сообщение перед созданием опроса."""
+        user_id = message.from_user.id
+
+        if user_id not in pending_polls:
+            return  # Если вдруг пользователя нет в списке, ничего не делаем
+
+        chat_id = pending_polls[user_id]["chat_id"]
+        group_id = pending_polls[user_id]["group_id"]
+        question = pending_polls[user_id]["question"]
+        options = pending_polls[user_id]["options"]
+        additional_text = message.text.strip()
+
+        # Если пользователь отправил "-", то доп. сообщение не добавляем
+        if additional_text != "-":
+            question = f"{question}\n{additional_text}"
+
+        # Создаем опрос
+        f.create_poll(bot, group_id, question, options, polls, "handle_additional_poll_message")
+        # Убираем пользователя из списка ожидания
+        del pending_polls[user_id]
+
+        bot.send_message(chat_id, "Опрос создан!")
+
 
     @bot.callback_query_handler(
         func=lambda call: call.data == "schedule" or call.data == "show_schedule" or call.data == "help" or call.data == "show_next_practice")
@@ -61,13 +89,16 @@ def register_handlers(bot):
         elif call.data == "help":
             bot.delete_message(chat_id, call.message.message_id)
         elif call.data == "show_next_practice":
-            bot.send_message(chat_id, f"Следующая тренировка: {f.get_next_practice()}")
+            bot.send_message(chat_id, f"Следующая тренировка: {f.format_practice_datetime(f.get_next_practice())}")
             bot.delete_message(chat_id, call.message.message_id)
 
     @bot.callback_query_handler(func=lambda call: call.data == "create_poll")
     def callback_handler_create_poll(call):
+        """Запрашивает у пользователя дополнительный текст перед созданием опроса."""
+        user_id = call.from_user.id
+        chat_id = call.message.chat.id
         # Создание опроса
-        next_practice= f.get_next_practice()
+        next_practice= f.format_practice_datetime(f.get_next_practice())
         question = f"{next_practice} кто?"
         options = ["Я", "Не я"]
         if f.poll_already_exists(polls, question):
@@ -75,8 +106,11 @@ def register_handlers(bot):
             bot.delete_message(call.message.chat.id, call.message.message_id)
             return
 
-        f.create_poll(bot, TG_GROUP_ID, question, options, polls)
-        bot.delete_message(call.message.chat.id, call.message.message_id)
+        # Запоминаем, что этот пользователь должен отправить дополнительное сообщение
+        pending_polls[user_id] = {"chat_id": chat_id, "group_id": TG_GROUP_ID, "question": question, "options": options}
+
+        bot.send_message(chat_id, "Отправьте дополнительное сообщение для опроса или напишите '-' для пропуска.")
+        bot.delete_message(chat_id, call.message.message_id)
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("toggle_practice_"))
     def toggle_practice_selection(call):
@@ -132,5 +166,16 @@ def register_handlers(bot):
             if user_id in polls[poll_id]["users"]:
                 polls[poll_id]["users"].remove(user_id)
         save_polls_to_file(polls, POLL_FILE)
+
+    @bot.message_handler(content_types=["delete"])
+    def handle_deleted_poll(message):
+        """Обработчик удаления опроса"""
+        if message.content_type == "delete":
+            poll_id = message.poll.id if message.poll else None
+
+            if poll_id and poll_id in polls:
+                del polls[poll_id]  # Удаляем из структуры
+                save_polls_to_file(polls, POLL_FILE)  # Сохраняем обновленный файл
+                logger.info(f"Опрос {poll_id} удален из структуры и файла.")
 
 polls = load_polls_from_file(POLL_FILE)
