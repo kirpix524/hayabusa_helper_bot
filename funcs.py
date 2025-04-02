@@ -8,7 +8,6 @@ from config import WEEK_ORDER, POLL_FILE, TG_GROUP_ID
 from log_funcs import logger
 from handlers import polls
 
-
 def add_menu(bot):
     bot.set_my_commands([
         telebot.types.BotCommand("start", "Старт"),
@@ -36,6 +35,9 @@ def set_schedule(selected_items):
 
     with open("schedule.json", "w", encoding="utf-8") as schedule_file:
         json.dump(schedule, schedule_file)
+
+def get_new_poll_data(practice_date_time):
+    return {"question": format_practice_datetime(practice_date_time), "options": ["Я", "Не я"]}
 
 
 def poll_already_exists(polls, question):
@@ -110,35 +112,33 @@ def schedule_poll(bot):
     """Запускает фоновый процесс, который ждет 17:00 дня перед тренировкой и создает опрос."""
     while True:
         next_practice = get_next_practice()  # Дата следующей тренировки
-        logger.info(f"Next practice: {next_practice}")
+        logger.debug(f"Next practice: {next_practice}")
         if not next_practice:
+            logger.debug(f"no next practice")
             time.sleep(3600)  # Ждем 1 час, если нет тренировки
             continue
 
         # Определяем время 17:00 за день до тренировки
         scheduled_time = next_practice - datetime.timedelta(days=1, hours=next_practice.hour - 17, minutes=next_practice.minute)
+        logger.debug(f"scheduled_time = {scheduled_time.strftime("%d.%m %a в %H:%M")}")
 
         # Текущее время
         now = datetime.datetime.now()
 
         # Если время уже прошло, переходим к следующей тренировке
-        if now >= scheduled_time:
-            time.sleep(3600)  # Ждем 1 час перед повторной проверкой
+        if now < scheduled_time:
+            sleep_time = (scheduled_time - now).total_seconds()
+            logger.debug(f"now ({now.strftime("%d.%m %a в %H:%M")}) < scheduled_time, time_sleep = {sleep_time}")
+            time.sleep(sleep_time)
             continue
 
-        # Вычисляем, сколько нужно спать до 17:00
-        sleep_time = (scheduled_time - now).total_seconds()
-        time.sleep(sleep_time)
-
         # Создаем опрос
-        chat_id = TG_GROUP_ID
-        question = f"{next_practice.strftime('%d.%m %a в %H:%M')} кто?"
-        options = ["Я", "Не я"]
+        new_poll_data = get_new_poll_data(next_practice)
 
-        if not poll_already_exists(polls, question):
-            create_poll(bot, chat_id, question, options, polls, "schedule_poll")
+        if not poll_already_exists(polls, new_poll_data["question"]):
+            create_poll(bot, TG_GROUP_ID, new_poll_data["question"], new_poll_data["options"], polls, "schedule_poll")
         else:
-            logger.info(f"Poll already exists: {question}")
+            logger.info(f"Poll already exists: {new_poll_data["question"]}")
 
 
         # Ждем 1 час перед повторной проверкой

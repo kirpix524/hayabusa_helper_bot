@@ -98,16 +98,15 @@ def register_handlers(bot):
         user_id = call.from_user.id
         chat_id = call.message.chat.id
         # Создание опроса
-        next_practice= f.format_practice_datetime(f.get_next_practice())
-        question = f"{next_practice} кто?"
-        options = ["Я", "Не я"]
-        if f.poll_already_exists(polls, question):
+        next_practice= f.get_next_practice()
+        new_poll_data = f.get_new_poll_data(next_practice)
+        if f.poll_already_exists(polls, new_poll_data["question"]):
             bot.send_message(call.message.chat.id, "Опрос уже создан")
             bot.delete_message(call.message.chat.id, call.message.message_id)
             return
 
         # Запоминаем, что этот пользователь должен отправить дополнительное сообщение
-        pending_polls[user_id] = {"chat_id": chat_id, "group_id": TG_GROUP_ID, "question": question, "options": options}
+        pending_polls[user_id] = {"chat_id": chat_id, "group_id": TG_GROUP_ID, "question": new_poll_data["question"], "options": new_poll_data["options"]}
 
         bot.send_message(chat_id, "Отправьте дополнительное сообщение для опроса или напишите '-' для пропуска.")
         bot.delete_message(chat_id, call.message.message_id)
@@ -143,11 +142,13 @@ def register_handlers(bot):
 
     @bot.poll_answer_handler()
     def handle_poll_vote(poll_answer):
+        # logger.debug(f"handle_poll_vote {poll_answer}")
         poll_id = poll_answer.poll_id
         user_id = poll_answer.user.id
 
         # Проверяем, отслеживаем ли мы этот опрос
         if poll_id not in polls:
+            # logger.debug(f"poll_id {poll_id} not in polls")
             return
 
         # Если список проголосовавших еще не создан, создаем его
@@ -157,12 +158,13 @@ def register_handlers(bot):
         # Если пользователь выбрал 1-й пункт (индекс 0)
         if 0 in poll_answer.option_ids:
             chat_id = polls[poll_id]["chat_id"]
-
+            # logger.debug(f"0 in poll_answer.option_ids")
             # Добавляем пользователя в список проголосовавших
             if user_id not in polls[poll_id]["users"]:
                 polls[poll_id]["users"].append(user_id)
         else:
             # Пользователь убрал голос -> удаляем его из списка
+            # logger.debug(f"0 not in poll_answer.option_ids")
             if user_id in polls[poll_id]["users"]:
                 polls[poll_id]["users"].remove(user_id)
         save_polls_to_file(polls, POLL_FILE)
@@ -170,6 +172,7 @@ def register_handlers(bot):
     @bot.message_handler(content_types=["delete"])
     def handle_deleted_poll(message):
         """Обработчик удаления опроса"""
+        logger.debug(f"handle_deleted_poll {message}")
         if message.content_type == "delete":
             poll_id = message.poll.id if message.poll else None
 
