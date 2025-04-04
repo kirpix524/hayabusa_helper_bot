@@ -23,7 +23,9 @@ def init_bot(bot):
 def get_schedule():
     with open("schedule.json", "r", encoding="utf-8") as schedule_file:
         schedule = json.load(schedule_file)
-    return ", ".join(f"{key} {value}" for key, value in schedule.items())
+    sorted_schedule = sorted(schedule.items(),
+                             key=lambda item: WEEK_ORDER.index(item[0]) if item[0] in WEEK_ORDER else len(WEEK_ORDER))
+    return ", ".join(f"{key} {value}" for key, value in sorted_schedule)
 
 
 def set_schedule(selected_items):
@@ -37,7 +39,7 @@ def set_schedule(selected_items):
         json.dump(schedule, schedule_file)
 
 def get_new_poll_data(practice_date_time):
-    return {"question": format_practice_datetime(practice_date_time), "options": ["Я", "Не я"]}
+    return {"question": f"{format_practice_datetime(practice_date_time)} кто?", "options": ["Я", "Не я"]}
 
 
 def poll_already_exists(polls, question):
