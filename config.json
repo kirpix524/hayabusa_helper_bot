@@ -7,5 +7,5 @@
   "logs_directory_deb" : "logs/",
   "polls_file" : "../data/polls.json",
   "polls_file_deb" : "polls.json",
-  "debug_mode" : 1
+  "debug_mode" : 0
 }
