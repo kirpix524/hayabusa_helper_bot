@@ -39,7 +39,7 @@ def set_schedule(selected_items):
         json.dump(schedule, schedule_file)
 
 def get_new_poll_data(practice_date_time):
-    return {"question": f"{format_practice_datetime(practice_date_time)} кто?", "options": ["Я", "Не я"]}
+    return {"question": f"{format_practice_datetime(practice_date_time)} кто?", "options": ['Я', 'Не я']}
 
 
 def poll_already_exists(polls, question):
@@ -122,7 +122,7 @@ def schedule_poll(bot):
 
         # Определяем время 17:00 за день до тренировки
         scheduled_time = next_practice - datetime.timedelta(days=1, hours=next_practice.hour - 17, minutes=next_practice.minute)
-        logger.debug(f"scheduled_time = {scheduled_time.strftime("%d.%m %a в %H:%M")}")
+        logger.debug(f"scheduled_time = {scheduled_time.strftime('%d.%m %a в %H:%M')}")
 
         # Текущее время
         now = datetime.datetime.now()
@@ -130,7 +130,7 @@ def schedule_poll(bot):
         # Если время уже прошло, переходим к следующей тренировке
         if now < scheduled_time:
             sleep_time = (scheduled_time - now).total_seconds()
-            logger.debug(f"now ({now.strftime("%d.%m %a в %H:%M")}) < scheduled_time, time_sleep = {sleep_time}")
+            logger.debug(f"now ({now.strftime('%d.%m %a в %H:%M')}) < scheduled_time, time_sleep = {sleep_time}")
             time.sleep(sleep_time)
             continue
 
@@ -140,7 +140,7 @@ def schedule_poll(bot):
         if not poll_already_exists(polls, new_poll_data["question"]):
             create_poll(bot, TG_GROUP_ID, new_poll_data["question"], new_poll_data["options"], polls, "schedule_poll")
         else:
-            logger.info(f"Poll already exists: {new_poll_data["question"]}")
+            logger.info(f"Poll already exists: {new_poll_data['question']}")
 
 
         # Ждем 1 час перед повторной проверкой
