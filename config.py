@@ -24,3 +24,4 @@ debug_mode = config["debug_mode"]
 if debug_mode==1:
     LOGS_DIRECTORY = config["logs_directory_deb"]
     POLL_FILE = config["polls_file_deb"]
+    TG_GROUP_ID = config["tg_group_id_deb"]

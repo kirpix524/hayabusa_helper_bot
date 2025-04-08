@@ -181,4 +181,11 @@ def register_handlers(bot):
                 save_polls_to_file(polls, POLL_FILE)  # Сохраняем обновленный файл
                 logger.info(f"Опрос {poll_id} удален из структуры и файла.")
 
+    @bot.message_handler(content_types=['new_chat_members'])
+    def handle_new_member(message):
+        for new_member in message.new_chat_members:
+            if new_member.id == bot.get_me().id:
+                group_id = message.chat.id
+                group_title = message.chat.title or "Без названия"
+                logger.info(f"Бот добавлен в группу: {group_title} (ID: {group_id})")
 polls = load_polls_from_file(POLL_FILE)

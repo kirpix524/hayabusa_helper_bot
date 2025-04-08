@@ -1,11 +1,12 @@
 {
-  "tg_group_id" : "-4744786569",
+  "tg_group_id" : "-526078586",
   "admins" : [463653491],
   "avail_practices" : ["Понедельник 20:00", "Четверг 20:00", "Суббота 18:00"],
   "week_order" : ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"],
   "logs_directory" : "../data/logs/",
-  "logs_directory_deb" : "logs/",
   "polls_file" : "../data/polls.json",
+  "debug_mode" : 0,
+  "logs_directory_deb" : "logs/",
   "polls_file_deb" : "polls.json",
-  "debug_mode" : 0
+  "tg_group_id_deb" : "-4744786569"
 }
