@@ -20,8 +20,11 @@ AVAIL_PRACTICES = config["avail_practices"]
 WEEK_ORDER = config["week_order"]
 LOGS_DIRECTORY = config["logs_directory"]
 POLL_FILE = config["polls_file"]
+TIME_FOR_POLL_DAYS = int(config["time_for_poll_days"])
+TIME_FOR_POLL_HOURS = int(config["time_for_poll_hours"])
 debug_mode = config["debug_mode"]
 if debug_mode==1:
     LOGS_DIRECTORY = config["logs_directory_deb"]
     POLL_FILE = config["polls_file_deb"]
     TG_GROUP_ID = config["tg_group_id_deb"]
+    TIME_FOR_POLL_HOURS = int(config["time_for_poll_hours_deb"])

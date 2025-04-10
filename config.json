@@ -5,8 +5,11 @@
   "week_order" : ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"],
   "logs_directory" : "../data/logs/",
   "polls_file" : "../data/polls.json",
+  "time_for_poll_hours" : 13,
+  "time_for_poll_days" : 1,
   "debug_mode" : 0,
   "logs_directory_deb" : "logs/",
   "polls_file_deb" : "polls.json",
-  "tg_group_id_deb" : "-4744786569"
+  "tg_group_id_deb" : "-4744786569",
+  "time_for_poll_hours_deb" : 17
 }

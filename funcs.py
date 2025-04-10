@@ -4,7 +4,7 @@ import datetime
 import time
 
 from handlers import register_handlers, save_polls_to_file
-from config import WEEK_ORDER, POLL_FILE, TG_GROUP_ID
+from config import WEEK_ORDER, POLL_FILE, TG_GROUP_ID, TIME_FOR_POLL_HOURS, TIME_FOR_POLL_DAYS
 from log_funcs import logger
 from handlers import polls
 
@@ -121,7 +121,7 @@ def schedule_poll(bot):
             continue
 
         # Определяем время 17:00 за день до тренировки
-        scheduled_time = next_practice - datetime.timedelta(days=1, hours=next_practice.hour - 17, minutes=next_practice.minute)
+        scheduled_time = next_practice - datetime.timedelta(days=TIME_FOR_POLL_DAYS, hours=next_practice.hour - TIME_FOR_POLL_HOURS, minutes=next_practice.minute)
         logger.debug(f"scheduled_time = {scheduled_time.strftime('%d.%m %a в %H:%M')}")
 
         # Текущее время
