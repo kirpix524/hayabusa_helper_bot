@@ -138,6 +138,7 @@ def register_handlers(bot):
         bot.delete_message(chat_id, call.message.message_id)
 
         bot.send_message(chat_id, f"Вы выбрали {selected_items}, данные успешно сохранены")
+        bot.send_message(TG_GROUP_ID, f"Внимание! Расписание тренировок изменено, новое расписание: {f.get_schedule()}")
         del user_choices_toggle_practice[chat_id]
 
     @bot.poll_answer_handler()

@@ -8,6 +8,7 @@ def load_config():
         config = json.load(config_file)
     load_dotenv(".env")
     config["tg_api_key"] = os.getenv("HAYA_TG_API_KEY")
+    config["debug_tg_api_key"] = os.getenv("TEST_BOT_API_KEY")
     return config
 
 
@@ -24,6 +25,7 @@ TIME_FOR_POLL_DAYS = int(config["time_for_poll_days"])
 TIME_FOR_POLL_HOURS = int(config["time_for_poll_hours"])
 debug_mode = config["debug_mode"]
 if debug_mode==1:
+    TG_API_KEY = config["debug_tg_api_key"]
     LOGS_DIRECTORY = config["logs_directory_deb"]
     POLL_FILE = config["polls_file_deb"]
     TG_GROUP_ID = config["tg_group_id_deb"]
