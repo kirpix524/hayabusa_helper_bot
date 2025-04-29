@@ -2,9 +2,11 @@ import telebot
 import json
 import datetime
 import time
+import os
 
 from handlers import register_handlers, save_polls_to_file
-from config import WEEK_ORDER, POLL_FILE, TG_GROUP_ID, TIME_FOR_POLL_HOURS, TIME_FOR_POLL_DAYS
+from config import WEEK_ORDER, POLL_FILE, TG_GROUP_ID, TIME_FOR_POLL_HOURS, TIME_FOR_POLL_DAYS, SCHEDULE_FILE, \
+    CANCELLED_PRACTICES_FILE
 from log_funcs import logger
 from handlers import polls
 
@@ -21,7 +23,7 @@ def init_bot(bot):
 
 
 def get_schedule():
-    with open("schedule.json", "r", encoding="utf-8") as schedule_file:
+    with open(SCHEDULE_FILE, "r", encoding="utf-8") as schedule_file:
         schedule = json.load(schedule_file)
     sorted_schedule = sorted(schedule.items(),
                              key=lambda item: WEEK_ORDER.index(item[0]) if item[0] in WEEK_ORDER else len(WEEK_ORDER))
@@ -29,13 +31,12 @@ def get_schedule():
 
 
 def set_schedule(selected_items):
-    #print(f"set_schedule {selected_items}")
     schedule = {}
     for item in selected_items:
         day, time = item.split(" ", 1)
         schedule[day] = time
 
-    with open("schedule.json", "w", encoding="utf-8") as schedule_file:
+    with open(SCHEDULE_FILE, "w", encoding="utf-8") as schedule_file:
         json.dump(schedule, schedule_file)
 
 def get_new_poll_data(practice_date_time):
@@ -65,30 +66,64 @@ def create_poll(bot, chat_id, question, options, polls, author=None):
 
 
 def get_next_practice():
-    with open("schedule.json", "r", encoding="utf-8") as schedule_file:
+    practices = get_next_practices(1)
+    if practices:
+        return practices[0]
+    return None
+
+def get_next_practices(count=1):
+    with open(SCHEDULE_FILE, "r", encoding="utf-8") as schedule_file:
         schedule = json.load(schedule_file)
 
-    today = datetime.date.today()  # Сегодняшняя дата
-    weekday_today = today.weekday()  # Номер дня недели (0 = Понедельник, 6 = Воскресенье)
+    cancelled = []
+    if os.path.exists(CANCELLED_PRACTICES_FILE):
+        with open(CANCELLED_PRACTICES_FILE, "r", encoding="utf-8") as file:
+            cancelled = json.load(file)
 
-    # Перебираем дни недели по расписанию
-    for i in range(7):
-        check_day = (weekday_today + i) % 7  # Определяем номер дня, который проверяем
-        day_name = WEEK_ORDER[check_day]  # Получаем название дня
+    today = datetime.date.today()
+    now_time = datetime.datetime.now().time()
+    weekday_today = today.weekday()
+
+    practices = []
+    days_checked = 0
+
+    while len(practices) < count and days_checked < 14:
+        check_day = (weekday_today + days_checked) % 7
+        day_name = WEEK_ORDER[check_day]
 
         if day_name in schedule:
-            training_time = schedule[day_name]
-            training_datetime = datetime.datetime.strptime(training_time, "%H:%M").time()
-            training_date = today + datetime.timedelta(days=i)
+            training_time = datetime.datetime.strptime(schedule[day_name], "%H:%M").time()
+            training_date = today + datetime.timedelta(days=days_checked)
 
-            # Если тренировка сегодня, проверяем текущее время
-            if i == 0 and datetime.datetime.now().time() > training_datetime:
-                continue  # Пропускаем, если уже прошло
+            # Пропускаем сегодняшние прошедшие тренировки
+            if days_checked == 0 and now_time > training_time:
+                days_checked += 1
+                continue
 
-            #formatted = f"{day_name} {training_date.strftime('%d.%m')} в {training_datetime.strftime('%H:%M')}"
-            return datetime.datetime.combine(training_date, training_datetime)  # Возвращаем дату и время тренировки
+            training_datetime = datetime.datetime.combine(training_date, training_time)
+            if training_datetime.isoformat() in cancelled:
+                days_checked += 1
+                continue
 
-    return None
+            practices.append(training_datetime)
+
+        days_checked += 1
+
+    return practices
+
+
+def cancel_practice(practice_iso):
+    if os.path.exists(CANCELLED_PRACTICES_FILE):
+        with open(CANCELLED_PRACTICES_FILE, "r", encoding="utf-8") as file:
+            cancelled = json.load(file)
+    else:
+        cancelled = []
+
+    if practice_iso not in cancelled:
+        cancelled.append(practice_iso)
+
+        with open(CANCELLED_PRACTICES_FILE, "w", encoding="utf-8") as file:
+            json.dump(cancelled, file, ensure_ascii=False, indent=2)
 
 def format_practice_datetime(training_datetime):
     """Форматирует дату и время тренировки в строку."""

@@ -1,4 +1,6 @@
-from buttons import get_main_menu, get_checkbox_menu, user_choices_toggle_practice
+from datetime import datetime
+
+from buttons import get_main_menu, get_checkbox_menu, user_choices_toggle_practice, get_next_practices_menu
 import os
 import json
 import funcs as f
@@ -75,7 +77,7 @@ def register_handlers(bot):
 
 
     @bot.callback_query_handler(
-        func=lambda call: call.data == "schedule" or call.data == "show_schedule" or call.data == "help" or call.data == "show_next_practice")
+        func=lambda call: call.data == "schedule" or call.data == "show_schedule" or call.data == "help" or call.data == "show_next_practice" or call.data == "cancel_practice")
     def callback_handler(call):
         chat_id = call.message.chat.id
         if call.data == "schedule":
@@ -90,6 +92,10 @@ def register_handlers(bot):
             bot.delete_message(chat_id, call.message.message_id)
         elif call.data == "show_next_practice":
             bot.send_message(chat_id, f"Следующая тренировка: {f.format_practice_datetime(f.get_next_practice())}")
+            bot.delete_message(chat_id, call.message.message_id)
+        elif call.data == "cancel_practice":
+            markup = get_next_practices_menu(f.get_next_practices(3))
+            bot.send_message(chat_id, "Выберите тренировку, которую нужно отменить", reply_markup=markup)
             bot.delete_message(chat_id, call.message.message_id)
 
     @bot.callback_query_handler(func=lambda call: call.data == "create_poll")
@@ -126,6 +132,16 @@ def register_handlers(bot):
             user_choices_toggle_practice[chat_id].add(option)
 
         bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=get_checkbox_menu(chat_id, AVAIL_PRACTICES, user_choices_toggle_practice, "toggle_practice_", "save_schedule"))
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("cancel_practice_"))
+    def cancel_practice_selection(call):
+        #print(f"cancel_practice_selection {call}")
+        chat_id = call.message.chat.id
+        practice_id = call.data.replace("cancel_practice_", "")
+        f.cancel_practice(practice_id)
+        bot.send_message(chat_id, f"Тренировка {f.format_practice_datetime(datetime.fromisoformat(practice_id))} успешно отменена")
+        bot.send_message(TG_GROUP_ID, f"Внимание! Тренировка {f.format_practice_datetime(datetime.fromisoformat(practice_id))} отменена. Следующая тренировка состоится {f.format_practice_datetime(f.get_next_practice())}")
+        bot.delete_message(chat_id, call.message.message_id)
 
     @bot.callback_query_handler(func=lambda call: call.data == "save_schedule")
     def save_schedule(call):

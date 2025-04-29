@@ -23,6 +23,8 @@ LOGS_DIRECTORY = config["logs_directory"]
 POLL_FILE = config["polls_file"]
 TIME_FOR_POLL_DAYS = int(config["time_for_poll_days"])
 TIME_FOR_POLL_HOURS = int(config["time_for_poll_hours"])
+SCHEDULE_FILE = config["schedule_file"]
+CANCELLED_PRACTICES_FILE = config["cancelled_practices_file"]
 debug_mode = config["debug_mode"]
 if debug_mode==1:
     TG_API_KEY = config["debug_tg_api_key"]
@@ -30,3 +32,4 @@ if debug_mode==1:
     POLL_FILE = config["polls_file_deb"]
     TG_GROUP_ID = config["tg_group_id_deb"]
     TIME_FOR_POLL_HOURS = int(config["time_for_poll_hours_deb"])
+    CANCELLED_PRACTICES_FILE = config["cancelled_practices_file_deb"]

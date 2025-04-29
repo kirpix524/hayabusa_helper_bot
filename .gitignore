@@ -173,3 +173,4 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 /polls.json
+/cancelled_practices.json
